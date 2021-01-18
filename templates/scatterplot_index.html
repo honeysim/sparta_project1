@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="kr">
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+              integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+              crossorigin="anonymous">
+        <!-- Optional JavaScript -->
+        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+                integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+                crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+                integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+                crossorigin="anonymous"></script>
+        <title>Title</title>
+        <style>
+            .title {
+                padding-top: 50px;
+                margin-bottom: 100px;
+
+            }
+
+            .wrap {
+                width: 1500px;
+                margin: auto;
+            }
+
+            .input_data_btn {
+                text-align: center;
+                margin: 30px
+
+            }
+
+            .attribute_left {
+                float: left;
+                width: 50%;
+                border-right: 1px solid darkgrey;
+
+
+            }
+
+            .attribute_right {
+                float: right;
+                width: 50%;
+                padding-left: 50px;
+
+            }
+
+            .input-group.mb-3 {
+                width: 700px;
+            }
+
+
+        </style>
+
+        <script>
+            $(document).ready(function () {
+                get_columns();
+            });
+
+            function inputdata() {
+                let data = $('#data').val()
+
+                $.ajax({
+                    type: "post",
+                    url: "/scatterplot",
+                    data: {data_give: data},
+                    success: function (response) {
+                        if (response["result"] == "success") {
+                            alert(response["msg"])
+                            window.location.reload();
+                        } else {
+                            alert("서버 오류")
+                        }
+                    }
+
+                })
+
+            }
+
+
+            function get_columns() {
+
+                $.ajax({
+                    type: "get",
+                    url: "/scatterplot/getcolumns",
+                    success: function (response) {
+                        let columns = response['columns'];
+                        if (response["result"] == "success") {
+                            for (let i = 0; i < columns.length; i++) {
+                                attatch_columns(columns[i])
+                            }
+                        } else {
+                            alert("서버 오류")
+                        }
+                    }
+                })
+
+            }
+
+            function attatch_columns(col) {
+                new_one =
+                    `<option>${col}</option>`
+                $('#x-axis-select').append(new_one)
+                $('#y-axis-select').append(new_one)
+            }
+
+            function draw_chart(img_tag) {
+                chart_tag =
+                    `<img src= ${img_tag} alt="차트이미지">
+                     <div class="input_data_btn" style="margin-top:30px;">
+                     <button type="button" onclick="clear()" class="btn btn-secondary">데이터 삭제</button>
+                     </div>`
+
+                $('#chart_img').append(chart_tag)
+            }
+
+
+            function input_attribute() {
+
+                let x_axis = $('#x-axis-select').val();
+                let y_axis = $('#y-axis-select').val();
+                let title = $('#chart_title').val();
+                let color = $('#chart_color').val();
+                $.ajax({
+                    type: "post",
+                    url: "/scatterplot/InputAttribute",
+                    data: {
+                        x_axis_give: x_axis,
+                        y_axis_give: y_axis,
+                        title_give: title,
+                        color_give: color
+                    },
+
+                    success: function (response) {
+                        if (response["result"] == "success") {
+                            alert(response["msg"])
+                            $.ajax({
+                                type: "get",
+                                url: "/scatterplot/InputAttribute",
+                                data: {},
+                                success: setTimeout(draw_chart(response['img_tag']), 2000)
+                            })
+                        } else {
+                            alert("서버 오류")
+                        }
+                    }
+
+
+                })
+            }
+
+            function clear(){
+
+            }
+
+
+        </script>
+    </head>
+    <body>
+        <div class="wrap">
+            <div class="title" style="text-align : center">
+                <a href="https://naver.com" style="font-size : 50px">Graphic.com</a>
+                <br><br>
+                <span style="font-size: 30px">Draw simple graph or chart</span>
+            </div>
+            <hr>
+            <div class="input-group" style="height: 300px;">
+                <span class="input-group-text" style="font-size : 40px;">Copy Excel data</span>
+                <textarea id="data" class="form-control" aria-label="With textarea"></textarea>
+            </div>
+
+            <div class="input_data_btn">
+                <button type="button" onclick="inputdata()" class="btn btn-secondary">데이터입력</button>
+            </div>
+            <div class="attribute">
+                <div class="attribute_left">
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <label class="input-group-text" for="x-axis-select">X-axis</label>
+                        </div>
+                        <select class="custom-select" id="x-axis-select">
+                        </select>
+                    </div>
+
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <label class="input-group-text" for="y-axis-select">Y-axis</label>
+                        </div>
+                        <select class="custom-select" id="y-axis-select">
+                        </select>
+                    </div>
+                </div>
+                <div class="attribute_right">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">title</span>
+                        <input type="text" class="form-control" id="chart_title" placeholder="차트 제목을 입력하세요"
+                               aria-label="Username" aria-describedby="basic-addon1">
+                    </div>
+
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">color</span>
+                        <form name="form" method="post">
+                            <input type="color" id="chart_color" name="userColor"
+                                   style="height : 38.24px; width : 637.93px;">
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="input_data_btn">
+                <button type="button" onclick="input_attribute()" class="btn btn-secondary">차트 그리기!</button>
+            </div>
+
+            <div id="chart_img">
+
+            </div>
+
+
+        </div>
+
+    </body>
+</html>
